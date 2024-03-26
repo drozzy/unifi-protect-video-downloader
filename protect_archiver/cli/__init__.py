@@ -9,7 +9,8 @@ def main() -> None:
 
     import urllib3
 
-    logging.basicConfig(format="%(message)s", level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
     os.environ.setdefault("PYTHONUNBUFFERED", "true")
 
