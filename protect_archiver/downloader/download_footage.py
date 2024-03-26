@@ -81,9 +81,15 @@ def download_footage(
             # download the file
             download_file(client, video_export_query, filename)
         else:
-            logging.exception(f"Cannot download file: disk usage exceeds {client.max_usage}% at {download_dir}.")
+            current_usage = get_disk_usage(download_dir)
+            logging.exception(f"Cannot download file: current disk usage {current_usage}% exceeds max allowed usage of {client.max_usage}% at {download_dir}.")
             raise Errors.ProtectError(0)
         
+
+def get_disk_usage(path):
+    total, used, free = shutil.disk_usage(path)
+    current_usage_percent = used / total * 100
+    return current_usage_percent
 
 def check_disk_space(path, max_usage_percent):
     """
@@ -93,6 +99,5 @@ def check_disk_space(path, max_usage_percent):
     :param max_usage_percent: The maximum allowed disk usage percentage.
     :return: True if the disk usage is below the threshold, False otherwise.
     """
-    total, used, free = shutil.disk_usage(path)
-    current_usage_percent = used / total * 100
+    current_usage_percent = get_disk_usage(path)
     return current_usage_percent < max_usage_percent
