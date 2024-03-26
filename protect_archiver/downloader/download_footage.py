@@ -81,7 +81,7 @@ def download_footage(
             # download the file
             download_file(client, video_export_query, filename)
         else:
-            print(f"Cannot download file: disk usage exceeds {client.max_usage}% at {download_dir}.")
+            logging.exception(f"Cannot download file: disk usage exceeds {client.max_usage}% at {download_dir}.")
             raise Errors.ProtectError(0)
         
 
