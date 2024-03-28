@@ -42,7 +42,6 @@ class ProtectSync:
             state = {"cameras": {}}
 
         logging.info(f"State for the cameras found: {state}")
-        raise Exception("Quitting.")
         for camera in camera_list:
             try:
                 camera_state = state["cameras"].setdefault(camera.id, {})
@@ -53,6 +52,9 @@ class ProtectSync:
                     if "last" in camera_state
                     else camera.recording_start.replace(minute=0, second=0, microsecond=0)
                 )
+                logging.info(f"Start date for camera: {start}")
+                raise Exception("Quitting.")
+
                 end = datetime.now().replace(minute=0, second=0, microsecond=0)
                 for interval_start, interval_end in calculate_intervals(start, end):
                     Downloader.download_footage(
