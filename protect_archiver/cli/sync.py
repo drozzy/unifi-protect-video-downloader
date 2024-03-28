@@ -85,6 +85,15 @@ from protect_archiver.utils import print_download_stats
     show_envvar=True,
 )
 @click.option(
+    "--skip-existing-files",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Skip downloading files which already exist on disk",
+    envvar="PROTECT_SKIP_EXISTING",
+    show_envvar=True,
+)
+@click.option(
     "--use-utc-filenames",
     is_flag=True,
     default=False,
@@ -119,6 +128,7 @@ def sync(
     statefile: str,
     ignore_state: bool,
     ignore_failed_downloads: bool,
+    skip_existing_files: bool,
     cameras: str,
     use_utc_filenames: bool,
 ) -> None:
@@ -137,6 +147,7 @@ def sync(
         verify_ssl=verify_ssl,
         destination_path=dest,
         ignore_failed_downloads=ignore_failed_downloads,
+        skip_existing_files=skip_existing_files,
         use_subfolders=True,
         use_utc_filenames=use_utc_filenames,
     )
