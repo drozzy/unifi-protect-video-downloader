@@ -31,10 +31,7 @@ class ProtectSync:
             json.dump(state, fp, default=json_encode)
 
     def run(self, camera_list: list, ignore_state: bool = False) -> None:
-        # noinspection PyUnboundLocalVariable
-        logging.info(
-            f"Synchronizing video files from 'https://{self.client.address}:{self.client.port}"
-        )
+        logging.info(f"Synchronizing video files from 'https://{self.client.address}:{self.client.port}")
 
         if not ignore_state:
             state = self.readstate()
@@ -42,35 +39,41 @@ class ProtectSync:
             state = {"cameras": {}}
 
         logging.info(f"State for the cameras found: {state}")
-        for camera in camera_list:
-            try:
-                camera_state = state["cameras"].setdefault(camera.id, {})
-                start = (
-                    dateutil.parser.parse(camera_state["last"]).replace(
-                        minute=0, second=0, microsecond=0
-                    )
-                    if "last" in camera_state
-                    else camera.recording_start.replace(minute=0, second=0, microsecond=0)
-                )
-                logging.info(f"Start date for camera: {start}")
 
-                end = datetime.now().replace(minute=0, second=0, microsecond=0)
-                for interval_start, interval_end in calculate_intervals(start, end):
-                    Downloader.download_footage(
-                        self.client,
-                        interval_start,
-                        interval_end,
-                        camera,
-                        disable_alignment=False,
-                        disable_splitting=False,
-                    )
-                    state["cameras"][camera.id] = {
-                        "last": interval_end,
-                        "name": camera.name,
-                    }
-            except Exception:
-                logging.exception(
-                    f"Failed to sync camera {camera.name} - continuing to next device"
-                )
-            finally:
-                self.writestate(state)
+        # Find the earliest start date across all cameras
+        global_start = datetime.now()
+        for camera in camera_list:
+            camera_state = state["cameras"].setdefault(camera.id, {})
+            camera_start = (
+                dateutil.parser.parse(camera_state["last"]).replace(minute=0, second=0, microsecond=0)
+                if "last" in camera_state
+                else camera.recording_start.replace(minute=0, second=0, microsecond=0)
+            )
+            if camera_start < global_start:
+                global_start = camera_start
+
+        current_time = datetime.now().replace(minute=0, second=0, microsecond=0)
+
+        for interval_start, interval_end in calculate_intervals(global_start, current_time):
+            for camera in camera_list:
+                camera_state = state["cameras"].get(camera.id, {})
+                last_downloaded = dateutil.parser.parse(camera_state.get("last", "1970-01-01T00:00:00Z")).replace(minute=0, second=0, microsecond=0)
+                
+                if interval_end > last_downloaded:
+                    try:
+                        Downloader.download_footage(
+                            self.client,
+                            interval_start,
+                            interval_end,
+                            camera,
+                            disable_alignment=False,
+                            disable_splitting=False,
+                        )
+                        state["cameras"][camera.id] = {
+                            "last": interval_end.isoformat(),
+                            "name": camera.name,
+                        }
+                        self.writestate(state)
+                    except Exception:
+                        logging.exception(f"Failed to sync camera {camera.name} - continuing to next device")
+
