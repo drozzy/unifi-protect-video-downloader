@@ -53,7 +53,6 @@ class ProtectSync:
                     else camera.recording_start.replace(minute=0, second=0, microsecond=0)
                 )
                 logging.info(f"Start date for camera: {start}")
-                raise Exception("Quitting.")
 
                 end = datetime.now().replace(minute=0, second=0, microsecond=0)
                 for interval_start, interval_end in calculate_intervals(start, end):
