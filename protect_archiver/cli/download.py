@@ -22,7 +22,7 @@ from protect_archiver.utils import print_download_stats
     show_envvar=True,
 )
 @click.option(
-    "--max_usage",
+    "--max-usage",
     default=80,
     help='Percent of disk space that must remain free before downloading a file',
 )

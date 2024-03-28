@@ -21,6 +21,11 @@ from protect_archiver.utils import print_download_stats
     show_envvar=True,
 )
 @click.option(
+    "--max-usage",
+    default=80,
+    help='Percent of disk space that must remain free before downloading a file',
+)
+@click.option(
     "--port",
     default=Config.PORT,
     show_default=True,
@@ -76,6 +81,15 @@ from protect_archiver.utils import print_download_stats
     show_envvar=True,
 )
 @click.option(
+    "--wait-between-downloads",
+    "download_wait",
+    default=0,
+    show_default=True,
+    help="Time to wait between file downloads, in seconds",
+    envvar="PROTECT_WAIT_BETWEEN_DOWNLOADS",
+    show_envvar=True,
+)
+@click.option(
     "--ignore-failed-downloads",
     is_flag=True,
     default=False,
@@ -120,6 +134,7 @@ from protect_archiver.utils import print_download_stats
 def sync(
     dest: str,
     address: str,
+    max_usage:int,
     port: int,
     not_unifi_os: bool,
     username: str,
@@ -128,6 +143,7 @@ def sync(
     statefile: str,
     ignore_state: bool,
     ignore_failed_downloads: bool,
+    download_wait: int,
     skip_existing_files: bool,
     cameras: str,
     use_utc_filenames: bool,
@@ -140,6 +156,7 @@ def sync(
 
     client = ProtectClient(
         address=address,
+        max_usage=max_usage,
         port=port,
         not_unifi_os=not_unifi_os,
         username=username,
@@ -147,6 +164,7 @@ def sync(
         verify_ssl=verify_ssl,
         destination_path=dest,
         ignore_failed_downloads=ignore_failed_downloads,
+        download_wait=download_wait,
         skip_existing_files=skip_existing_files,
         use_subfolders=True,
         use_utc_filenames=use_utc_filenames,
