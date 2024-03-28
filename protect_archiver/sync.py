@@ -45,9 +45,13 @@ class ProtectSync:
         for camera in camera_list:
             camera_state = state["cameras"].setdefault(camera.id, {})
             camera_start = (
-                dateutil.parser.parse(camera_state.get("last", "1970-01-01T00:00:00"))
-                .replace(tzinfo=None, minute=0, second=0, microsecond=0)
-            )
+                    dateutil.parser.parse(camera_state["last"]).replace(
+                        minute=0, second=0, microsecond=0
+                    )
+                    if "last" in camera_state
+                    else camera.recording_start.replace(minute=0, second=0, microsecond=0)
+                )
+            
             if camera_start < global_start:
                 global_start = camera_start
 
