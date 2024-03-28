@@ -40,6 +40,9 @@ class ProtectSync:
             state = self.readstate()
         else:
             state = {"cameras": {}}
+
+        logging.info(f"State for the cameras found: {state}")
+        raise Exception("Quitting.")
         for camera in camera_list:
             try:
                 camera_state = state["cameras"].setdefault(camera.id, {})
