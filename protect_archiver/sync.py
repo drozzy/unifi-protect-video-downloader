@@ -53,7 +53,7 @@ class ProtectSync:
 
         current_time = datetime.now().replace(minute=0, second=0, microsecond=0, tzinfo=None)
 
-        for interval_start, interval_end in calculate_intervals(global_start, current_time, interval_hours=1):  # or interval_days=1 for daily
+        for interval_start, interval_end in calculate_intervals(global_start, current_time,):
             for camera in camera_list:
                 camera_state = state["cameras"].get(camera.id, {})
                 last_downloaded_str = camera_state.get("last", "1970-01-01T00:00:00")
