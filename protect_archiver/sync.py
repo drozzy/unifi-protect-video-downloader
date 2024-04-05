@@ -1,6 +1,6 @@
 import json
 import logging
-
+from typing import Optional
 from datetime import datetime
 from os import path
 import dateutil.parser
@@ -12,8 +12,10 @@ from .utils import json_encode
 
 
 class ProtectSync:
-    def __init__(self, client: ProtectClient, destination_path: str, statefile: str) -> None:
+    def __init__(self, client: ProtectClient, destination_path: str, statefile: str, start:Optional[datetime], end:Optional[datetime]) -> None:
         self.client = client
+        self.start = start
+        self.end = end
         self.statefile = path.abspath(path.join(destination_path, statefile))
 
     def readstate(self) -> dict:
@@ -40,24 +42,28 @@ class ProtectSync:
 
         logging.info(f"State for the cameras found: {state}")
 
-        # Find the earliest start date across all cameras
-        global_start = datetime.now().replace(tzinfo=None)
-        for camera in camera_list:
-            camera_state = state["cameras"].setdefault(camera.id, {})
-            camera_start = (
-                    dateutil.parser.parse(camera_state["last"]).replace(
-                        minute=0, second=0, microsecond=0
+        if self.start:
+            start_time = self.start
+        else:
+            # Find the earliest start date across all cameras
+            start_time = datetime.now().replace(tzinfo=None)
+            for camera in camera_list:
+                camera_state = state["cameras"].setdefault(camera.id, {})
+                camera_start = (
+                        dateutil.parser.parse(camera_state["last"]).replace(
+                            minute=0, second=0, microsecond=0
+                        )
+                        if "last" in camera_state
+                        else camera.recording_start.replace(minute=0, second=0, microsecond=0)
                     )
-                    if "last" in camera_state
-                    else camera.recording_start.replace(minute=0, second=0, microsecond=0)
-                )
-            
-            if camera_start < global_start:
-                global_start = camera_start
+                
+                if camera_start < start_time:
+                    start_time = camera_start
 
-        current_time = datetime.now().replace(minute=0, second=0, microsecond=0, tzinfo=None)
+        curr_time = datetime.now().replace(minute=0, second=0, microsecond=0, tzinfo=None)
+        end_time = self.end if self.end else curr_time
 
-        for interval_start, interval_end in calculate_intervals(global_start, current_time,):
+        for interval_start, interval_end in calculate_intervals(start_time, end_time):
             for camera in camera_list:
                 camera_state = state["cameras"].get(camera.id, {})
                 last_downloaded_str = camera_state.get("last", "1970-01-01T00:00:00")

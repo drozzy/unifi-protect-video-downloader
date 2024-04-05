@@ -1,6 +1,8 @@
 from os import path
 
 import click
+from typing import Optional
+from datetime import datetime
 
 from protect_archiver.cli.base import cli
 from protect_archiver.client import ProtectClient
@@ -131,6 +133,36 @@ from protect_archiver.utils import print_download_stats
     envvar="PROTECT_SYNC_IGNORE_STATE",
     show_envvar=True,
 )
+@click.option(
+    "--start",
+    type=click.DateTime(
+        formats=[
+            "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M:%S%z",
+        ]
+    ),
+    required=False,
+    help=(
+        "Sync range start time. "
+    )
+)
+@click.option(
+    "--end",
+    type=click.DateTime(
+        formats=[
+            "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M:%S%z",
+        ]
+    ),
+    required=False,
+    help=(
+        "Sync range end time. "
+    )
+)
 def sync(
     dest: str,
     address: str,
@@ -147,6 +179,8 @@ def sync(
     skip_existing_files: bool,
     cameras: str,
     use_utc_filenames: bool,
+    start:Optional[datetime],
+    end:Optional[datetime]
 ) -> None:
     # normalize path to destination directory and check if it exists
     dest = path.abspath(dest)
@@ -178,7 +212,7 @@ def sync(
         camera_ids = set(cameras.split(","))
         camera_list = [c for c in camera_list if c.id in camera_ids]
 
-    process = ProtectSync(client=client, destination_path=dest, statefile=statefile)
+    process = ProtectSync(client=client, destination_path=dest, statefile=statefile, start=start, end=end)
     process.run(camera_list, ignore_state=ignore_state)
 
     print_download_stats(client)
