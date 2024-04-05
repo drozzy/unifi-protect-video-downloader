@@ -38,6 +38,7 @@ class ProtectSync:
         if not ignore_state:
             state = self.readstate()
         else:
+            logging.info(f'Ignoring existing camera state.')
             state = {"cameras": {}}
 
         logging.info(f"State for the cameras found: {state}")
@@ -62,6 +63,8 @@ class ProtectSync:
 
         curr_time = datetime.now().replace(minute=0, second=0, microsecond=0, tzinfo=None)
         end_time = self.end if self.end else curr_time
+
+        logging.info(f"Syncing videos files between {start_time} and {end_time} from")
 
         for interval_start, interval_end in calculate_intervals(start_time, end_time):
             for camera in camera_list:
